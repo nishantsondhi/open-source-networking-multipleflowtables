@@ -1,0 +1,393 @@
+
+TOTAL 24 FLOWS :
+
+17 FLOWS FROM 17 CURL COMMANDS
+
+M1 ---- M2 ---- M3
+
+2 Between M1 & M2, M2 & M3, M1 & M3 for ICMP (TOTAL 6)
+
+1 Between Controller and Switch
+
+TOTAL : 17 + 6 + 1 = 24
+
+----------------------------------------------------------------------------------------------------------------------------------------------
+
+TABLE 0 : RESPONSIBLE FOR ICMP COMMUNICATION & PASSING ON PACKETS OF TCP AND UDP TO TABLE 1
+
+Flow 1,2,3,21,22,23 ARE BETWEEN M1,M2 & M3 FOR ICMPs  ------- Priority 1
+
+Flow 24 IS BETWEEN CONTROLLER AND SWITCH              ------- Priority 0
+
+Flow 4,5 MATCHES TCP & UDP AND PASSES ON TO TABLE 1   ------- Priority 50,51
+
+Therefore,will first match if the ip_proto is TCP or UDP, if yes action is to goto Table 1, otherwise do normal switching.
+
+Total flows 6 + 1 + 2 = 9
+
+----------------------------------------------------------------------------------------------------------------------------------------------
+
+Flow 1
+ Match:
+  In Port: 1
+  Destination MAC: 94:DE:80:42:A4:AD
+  Source MAC: 94:DE:80:42:A8:D5
+ Attributes:
+  Table ID: 0                           Cookie:0x0
+  Priority: 1                           Duration: 1884 secs
+  Hard Timeout: 0 secs                  Idle Timeout: 0 secs
+  Byte Count: 496                       Packet Count: 7
+  Last Match: 00:08:03
+ Instructions:
+  Apply Actions:
+   Output Port: 3
+
+Flow 2
+ Match:
+  In Port: 1
+  Destination MAC: 94:DE:80:42:A8:93
+  Source MAC: 94:DE:80:42:A8:D5
+ Attributes:
+  Table ID: 0                           Cookie:0x0
+  Priority: 1                           Duration: 1926 secs
+  Hard Timeout: 0 secs                  Idle Timeout: 0 secs
+  Byte Count: 1144                      Packet Count: 14
+  Last Match: 00:01:33
+ Instructions:
+  Apply Actions:
+   Output Port: 2
+
+Flow 3
+ Match:
+  In Port: 2
+  Destination MAC: 94:DE:80:42:A8:D5
+  Source MAC: 94:DE:80:42:A8:93
+ Attributes:
+  Table ID: 0                           Cookie:0x0
+  Priority: 1                           Duration: 1926 secs
+  Hard Timeout: 0 secs                  Idle Timeout: 0 secs
+  Byte Count: 1046                      Packet Count: 13
+  Last Match: 00:01:33
+ Instructions:
+  Apply Actions:
+   Output Port: 1
+
+Flow 4
+ Match:
+  IP Protocol: TCP
+ Attributes:
+  Table ID: 0                           Cookie:0x1
+  Priority: 50                          Duration: 1902 secs
+  Hard Timeout: 0 secs                  Idle Timeout: 0 secs
+  Byte Count: 2527                      Packet Count: 37
+  Last Match: 00:01:39
+ Instructions:
+  Goto Table: 1
+
+Flow 5
+ Match:
+  IP Protocol: UDP
+ Attributes:
+  Table ID: 0                           Cookie:0x1
+  Priority: 51                          Duration: 1902 secs
+  Hard Timeout: 0 secs                  Idle Timeout: 0 secs
+  Byte Count: 810                       Packet Count: 6
+  Last Match: 00:04:32
+ Instructions:
+  Goto Table: 1
+
+
+Flow 21
+ Match:
+  In Port: 3
+  Destination MAC: 94:DE:80:42:A8:93
+  Source MAC: 94:DE:80:42:A4:AD
+ Attributes:
+  Table ID: 0                           Cookie:0x0
+  Priority: 1                           Duration: 1893 secs
+  Hard Timeout: 0 secs                  Idle Timeout: 0 secs
+  Byte Count: 534                       Packet Count: 7
+  Last Match: 00:07:17
+ Instructions:
+  Apply Actions:
+   Output Port: 2
+
+Flow 22
+ Match:
+  In Port: 2
+  Destination MAC: 94:DE:80:42:A4:AD
+  Source MAC: 94:DE:80:42:A8:93
+ Attributes:
+  Table ID: 0                           Cookie:0x0
+  Priority: 1                           Duration: 1893 secs
+  Hard Timeout: 0 secs                  Idle Timeout: 0 secs
+  Byte Count: 551                       Packet Count: 7
+  Last Match: 00:07:17
+ Instructions:
+  Apply Actions:
+   Output Port: 3
+
+Flow 23
+ Match:
+  In Port: 3
+  Destination MAC: 94:DE:80:42:A8:D5
+  Source MAC: 94:DE:80:42:A4:AD
+ Attributes:
+  Table ID: 0                           Cookie:0x0
+  Priority: 1                           Duration: 1884 secs
+  Hard Timeout: 0 secs                  Idle Timeout: 0 secs
+  Byte Count: 594                       Packet Count: 8
+  Last Match: 00:08:03
+ Instructions:
+  Apply Actions:
+   Output Port: 1
+
+Flow 24
+ Match:
+ Attributes:
+  Table ID: 0                           Cookie:0x0
+  Priority: 0                           Duration: 751 secs
+  Hard Timeout: 0 secs                  Idle Timeout: 0 secs
+  Byte Count: 1477                      Packet Count: 14
+  Last Match: 00:04:31
+ Instructions:
+  Apply Actions:
+   Output: CONTROLLER 
+
+---------------------------------------------------------------------------------------------------------------------------------------------
+
+TABLE 1 : RESPONSIBLE FOR FIREWALLING AND PASSING ON PACKETS OF DNS AND HTTP TO TABLES 2 & 3 RESPECTIVELY
+
+Flow 6,7 is to block TCP between 10.0.1.5 & 10.0.1.4			----- Priority 53,54
+Flow 8,9 is to block UDP between 10.0.1.3 & 10.0.1.5			----- Priority 55,56
+Flow 10,11,12 is to pass on TCP/UDP packets to respective ports		----- Priority 40
+Flow 13 is to pass on HTTP packets to Table 2				----- Priority 50
+Flow 14 is to pass on DNS packets to Table 3    			----- Priority 50
+
+Therefore Highest priority is given to firewalling that is blocking tcp and udp traffic between specified hosts, after that next priority is to match if the packets are meant to be of HTTP or DNS and passing them onto specified tables to ensure traffics are seperated.At the end normal switching between hosts is done by matching on the ports and destination which is done explicitly by curl commands too.
+
+Total Flows 2 + 2 + 3 + 1 + 1 = 9
+
+----------------------------------------------------------------------------------------------------------------------------------------------
+
+
+Flow 6
+ Match:
+  IP Protocol: TCP
+  Source IP:  10.0.1.5
+  Destination IP:  10.0.1.4
+ Attributes:
+  Table ID: 1                           Cookie:0x1
+  Priority: 53                          Duration: 1902 secs
+  Hard Timeout: 0 secs                  Idle Timeout: 0 secs
+  Byte Count: 0                 Packet Count: 0
+  Last Match: 00:31:42
+ Instructions:
+   DROP 
+
+Flow 7
+ Match:
+  IP Protocol: TCP
+  Source IP:  10.0.1.4
+  Destination IP:  10.0.1.5
+ Attributes:
+  Table ID: 1                           Cookie:0x1
+  Priority: 54                          Duration: 1902 secs
+  Hard Timeout: 0 secs                  Idle Timeout: 0 secs
+  Byte Count: 370                       Packet Count: 5
+  Last Match: 00:10:03
+ Instructions:
+   DROP 
+
+Flow 8
+ Match:
+  IP Protocol: UDP
+  Source IP:  10.0.1.3
+  Destination IP:  10.0.1.5
+ Attributes:
+  Table ID: 1                           Cookie:0x1
+  Priority: 55                          Duration: 1902 secs
+  Hard Timeout: 0 secs                  Idle Timeout: 0 secs
+  Byte Count: 0                 Packet Count: 0
+  Last Match: 00:31:42
+ Instructions:
+   DROP 
+
+Flow 9
+ Match:
+  IP Protocol: UDP
+  Source IP:  10.0.1.5
+  Destination IP:  10.0.1.3
+ Attributes:
+  Table ID: 1                           Cookie:0x1
+  Priority: 56                          Duration: 1902 secs
+  Hard Timeout: 0 secs                  Idle Timeout: 0 secs
+  Byte Count: 0                 Packet Count: 0
+  Last Match: 00:31:42
+ Instructions:
+   DROP 
+
+Flow 10
+ Match:
+  Destination IP:  10.0.1.3
+ Attributes:
+  Table ID: 1                           Cookie:0x1
+  Priority: 40                          Duration: 1902 secs
+  Hard Timeout: 0 secs                  Idle Timeout: 0 secs
+  Byte Count: 951                       Packet Count: 15
+  Last Match: 00:04:11
+ Instructions:
+  Apply Actions:
+   Output Port: 1
+
+Flow 11
+ Match:
+  Destination IP:  10.0.1.5
+ Attributes:
+  Table ID: 1                           Cookie:0x1
+  Priority: 40                          Duration: 1902 secs
+  Hard Timeout: 0 secs                  Idle Timeout: 0 secs
+  Byte Count: 60                        Packet Count: 1
+  Last Match: 00:01:39
+ Instructions:
+  Apply Actions:
+   Output Port: 2
+
+Flow 12
+ Match:
+  Destination IP:  10.0.1.4
+ Attributes:
+  Table ID: 1                           Cookie:0x1
+  Priority: 40                          Duration: 1902 secs
+  Hard Timeout: 0 secs                  Idle Timeout: 0 secs
+  Byte Count: 332                       Packet Count: 5
+  Last Match: 00:08:08
+ Instructions:
+  Apply Actions:
+   Output Port: 3
+
+Flow 13
+ Match:
+  IP Protocol: TCP
+  Destination TCP Port: 80
+ Attributes:
+  Table ID: 1                           Cookie:0x1
+  Priority: 50                          Duration: 1902 secs
+  Hard Timeout: 0 secs                  Idle Timeout: 0 secs
+  Byte Count: 814                       Packet Count: 11
+  Last Match: 00:01:39
+ Instructions:
+  Goto Table: 2
+
+Flow 17
+ Match:
+  IP Protocol: UDP
+  Destination UDP Port: 53
+ Attributes:
+  Table ID: 1                           Cookie:0x1
+  Priority: 50                          Duration: 1902 secs
+  Hard Timeout: 0 secs                  Idle Timeout: 0 secs
+  Byte Count: 87                        Packet Count: 1
+  Last Match: 00:07:22
+ Instructions:
+  Goto Table: 3
+
+---------------------------------------------------------------------------------------------------------------------------------------------
+
+TABLE 2 : THE PACKETS COMING IN ARE ONLY MEANT TO BE OF HTTP SO ONLY SIMPLE SWITCHING HAS TO BE PERFORMED
+
+3 Flows for forwarding packets to 3 ports respectively by matching destination Ips
+
+Total flows : 3
+
+---------------------------------------------------------------------------------------------------------------------------------------------
+
+Flow 14
+ Match:
+  Destination IP:  10.0.1.4
+ Attributes:
+  Table ID: 2                           Cookie:0x1
+  Priority: 40                          Duration: 1902 secs
+  Hard Timeout: 0 secs                  Idle Timeout: 0 secs
+  Byte Count: 0                 Packet Count: 0
+  Last Match: 00:31:42
+ Instructions:
+  Apply Actions:
+   Output Port: 3
+
+Flow 15
+ Match:
+  Destination IP:  10.0.1.5
+ Attributes:
+  Table ID: 2                           Cookie:0x1
+  Priority: 40                          Duration: 1902 secs
+  Hard Timeout: 0 secs                  Idle Timeout: 0 secs
+  Byte Count: 740                       Packet Count: 10
+  Last Match: 00:04:11
+ Instructions:
+  Apply Actions:
+   Output Port: 2
+
+Flow 16
+ Match:
+  Destination IP:  10.0.1.3
+ Attributes:
+  Table ID: 2                           Cookie:0x1
+  Priority: 40                          Duration: 1902 secs
+  Hard Timeout: 0 secs                  Idle Timeout: 0 secs
+  Byte Count: 74                        Packet Count: 1
+  Last Match: 00:01:39
+ Instructions:
+  Apply Actions:
+   Output Port: 1
+
+
+---------------------------------------------------------------------------------------------------------------------------------------------
+
+TABLE 3 : THE PACKETS COMING IN ARE ONLY MEANT TO BE OF DNS SO ONLY SIMPLE SWITCHING HAS TO BE PERFORMED
+
+3 Flows for forwarding packets to 3 ports respectively by matching destination Ips
+
+Total flows : 3
+
+---------------------------------------------------------------------------------------------------------------------------------------------
+Flow 18
+ Match:
+  Destination IP:  10.0.1.4
+ Attributes:
+  Table ID: 3                           Cookie:0x1
+  Priority: 40                          Duration: 1902 secs
+  Hard Timeout: 0 secs                  Idle Timeout: 0 secs
+  Byte Count: 0                 Packet Count: 0
+  Last Match: 00:31:42
+ Instructions:
+  Apply Actions:
+   Output Port: 3
+
+Flow 19
+ Match:
+  Destination IP:  10.0.1.5
+ Attributes:
+  Table ID: 3                           Cookie:0x1
+  Priority: 40                          Duration: 1902 secs
+  Hard Timeout: 0 secs                  Idle Timeout: 0 secs
+  Byte Count: 87                        Packet Count: 1
+  Last Match: 00:07:22
+ Instructions:
+  Apply Actions:
+   Output Port: 2
+
+Flow 20
+ Match:
+  Destination IP:  10.0.1.3
+ Attributes:
+  Table ID: 3                           Cookie:0x1
+  Priority: 40                          Duration: 1901 secs
+  Hard Timeout: 0 secs                  Idle Timeout: 0 secs
+  Byte Count: 0                 Packet Count: 0
+  Last Match: 00:31:41
+ Instructions:
+  Apply Actions:
+   Output Port: 1
+
+

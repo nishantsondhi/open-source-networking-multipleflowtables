@@ -1,0 +1,22 @@
+curl -X POST -d '{
+    "dpid": 123917682136716,
+    "cookie": 1,
+    "cookie_mask": 1,
+    "table_id": 1,
+    "idle_timeout": 0,
+    "hard_timeout": 0,
+    "priority": 53,
+    "flags": 1,
+    "match":{
+
+      "ip_proto": 6,
+      "nw_src": "10.0.1.5",
+      "nw_dst": "10.0.1.4"
+
+    },
+    "actions":[
+        {
+
+        }
+    ]
+ }' http://localhost:8080/stats/flowentry/add
